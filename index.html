@@ -59,7 +59,13 @@
             pointer-events: none; 
         }
 
-        /* 復古風格視窗 */
+        /* 視窗基礎樣式 */
+        .screen {
+            display: none;
+            pointer-events: auto;
+        }
+
+        /* 復古風格視窗 (Start Screen) */
         .screen.retro-theme {
             background: #1a1a1a;
             border: 4px solid #fff;
@@ -72,8 +78,6 @@
             max-height: 70%;
             overflow-y: auto;
             text-align: center;
-            pointer-events: auto;
-            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -86,21 +90,58 @@
             }
         }
 
-        .screen.retro-theme.active {
-            display: flex;
+        .screen.active {
+            display: flex !important;
         }
 
-        #game-over-screen.active {
+        /* Game Over 畫面樣式調整 */
+        #game-over-screen {
             position: absolute;
-            top: auto;
-            bottom: 35%;
-            transform: translateY(50%);
-            border: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: transparent;
             box-shadow: none;
-            padding: 0;
-            aspect-ratio: auto;
+            border: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        /* Happy New Year 圖片容器，位於能量條之上 */
+        #hny-image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: -50px; /* 上移避開 footer */
+            left: 0;
+            pointer-events: none;
+            z-index: 1; /* 第二層 */
+        }
+
+        #hny-image-display {
             width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Restart 按鈕容器確保在最上層且可點擊 */
+        #restart-btn-wrapper {
+            position: absolute;
+            bottom: 30%; 
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            pointer-events: auto;
+            z-index: 2; /* 第一層 (最上層) */
         }
 
         h1 {
@@ -180,7 +221,7 @@
             box-shadow: 0px 0px 0px #000;
         }
 
-        /* 鞭炮 UI 容器 */
+        /* 鞭炮 UI 容器 (z-index: 30) */
         #firecracker-wrapper {
             position: absolute;
             bottom: 150px; 
@@ -235,7 +276,6 @@
             #ad-banner-slot { width: 90% !important; height: 70px !important; margin-bottom: 5px !important; }
 
             /* 手機版 Footer 文字進一步縮小 */
-            footer { padding: 5px 5px !important; bottom: 5px !important; }
             .footer-text { font-size: 0.55rem !important; }
             
             #ad-banner-slot { width: 90% !important; height: 70px !important; margin-bottom: 5px !important; }
@@ -400,7 +440,7 @@
         }
 
         .ad-placeholder {
-            color: #eee; /* 改為淺色方便在不同底色下閱讀 */
+            color: #eee;
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -463,8 +503,11 @@
             </div>
 
             <!-- Game Over Screen -->
-            <div id="game-over-screen" class="screen retro-theme">
-                <div style="width: 100%;">
+            <div id="game-over-screen" class="screen">
+                <div id="hny-image-container">
+                    <img id="hny-image-display" src="" alt="Happy New Year">
+                </div>
+                <div id="restart-btn-wrapper">
                     <button id="restart-btn" class="retro-btn">RESTART</button>
                 </div>
             </div>
@@ -481,11 +524,11 @@
     </div>
 
     <script>
-        // --- 廣告數據配置 (包含底色設定) ---
+        // --- 廣告數據配置 ---
         const AD_DATA = [
-            { img: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI-ad/ad-01.png', url: 'https://www.instagram.com/fi_hahahaha/' }, // 廣告 1 (深紅)
-            { img: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI-ad/ad-02.png', url: 'https://www.instagram.com/mama.draw.diary/' }, // 廣告 2 (深綠)
-            { img: '', url: '', }  // 廣告 3 (深藍)
+            { img: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI-ad/ad-01.png', url: 'https://www.instagram.com/fi_hahahaha/' },
+            { img: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI-ad/ad-02.png', url: 'https://www.instagram.com/mama.draw.diary/' },
+            { img: '', url: '', }
         ];
 
         const YOUR_LINKS = {
@@ -517,8 +560,7 @@
             AD_DATA.forEach((ad, index) => {
                 const slide = document.createElement('div');
                 slide.className = `ad-slide ${index === 0 ? 'active' : ''}`;
-                slide.style.backgroundColor = ad.color; // 套用底色
-                slide.onclick = () => window.open(ad.url, '_blank');
+                slide.onclick = () => { if(ad.url) window.open(ad.url, '_blank'); };
 
                 if (ad.img && ad.img.trim() !== '') {
                     const image = new Image();
@@ -631,7 +673,6 @@
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 this.volume = 0.3;
                 this.isBGMPlaying = false;
-                this.bgmTimer = null;
                 this.configBgmUrl = convertToDirectLink(YOUR_LINKS.bgm);
                 this.configClickUrl = convertToDirectLink(YOUR_LINKS.click);
                 this.customBgmAudio = null;
@@ -692,18 +733,14 @@
                 this.isBGMPlaying = true;
                 if (this.customBgmAudio) {
                     this.playPromise = this.customBgmAudio.play();
-                    try {
-                        await this.playPromise;
-                    } catch (error) {}
+                    try { await this.playPromise; } catch (error) {}
                 }
             }
             async stopBGM() {
                 this.isBGMPlaying = false;
                 if (this.customBgmAudio) {
                     if (this.playPromise !== undefined) {
-                        try {
-                            await this.playPromise;
-                        } catch (e) {}
+                        try { await this.playPromise; } catch (e) {}
                     }
                     this.customBgmAudio.pause();
                 }
@@ -794,13 +831,22 @@
             emmaState = 'DJING'; stateTimer = 0; particles = []; firecrackerTargets = [];
             isBonusTime = false; energy = 0; updateEnergyUI();
             scoreEl.innerText = '0000'; diffEl.innerText = 'LV 1';
+            
             document.getElementById('start-screen').classList.remove('active');
             document.getElementById('game-over-screen').classList.remove('active');
+            
             sound.startBGM(); requestAnimationFrame(gameLoop);
         }
 
         function gameOver() {
             gameState = 'GAMEOVER'; sound.playLose();
+            
+            // 將 Happy New Year 圖片設置到 HTML img 標籤中
+            const hnyImg = document.getElementById('hny-image-display');
+            if (assets.images.happy_new_year) {
+                hnyImg.src = assets.images.happy_new_year.src;
+            }
+            
             document.getElementById('game-over-screen').classList.add('active');
         }
 
@@ -850,7 +896,7 @@
             } else { gameOver(); }
         }
 
-        window.addEventListener('mousedown', (e) => { handleClick(e); });
+        window.addEventListener('mousedown', handleClick);
         window.addEventListener('touchstart', (e) => { handleClick(e); }, {passive: false});
 
         function gameLoop(timestamp) {
@@ -913,29 +959,31 @@
                 ctx.drawImage(turntable, -w/2, -h/2, w, h); ctx.restore();
             }
 
-            if (emmaState === 'DJING') {
-                const head = assets.images.emma_head, body = assets.images.emma_body;
-                if (body && body.complete) {
-                    const { w, h } = getAdaptiveSize(body, canvas.width, canvas.height);
-                    ctx.drawImage(body, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-                }
-                const offset = (beatTimer % 500) < 250 ? Math.sin((beatTimer % 500) / 250 * Math.PI) * 20 : 0;
-                if (head && head.complete) {
-                    const { w, h } = getAdaptiveSize(head, canvas.width, canvas.height);
-                    ctx.drawImage(head, (canvas.width - w) / 2, (canvas.height - h) / 2 + offset, w, h);
-                }
-            } else {
-                const danger = assets.images.emma_danger;
-                if (danger && danger.complete) {
-                    const { w, h } = getAdaptiveSize(danger, canvas.width, canvas.height);
-                    ctx.drawImage(danger, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-                }
-                if (gameState !== 'GAMEOVER') {
+            // 遊戲結束時不再從 Canvas 繪製 happy_new_year，改由 HTML 層級顯示
+            if (gameState !== 'GAMEOVER') {
+                if (emmaState === 'DJING') {
+                    const head = assets.images.emma_head, body = assets.images.emma_body;
+                    if (body && body.complete) {
+                        const { w, h } = getAdaptiveSize(body, canvas.width, canvas.height);
+                        ctx.drawImage(body, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                    }
+                    const offset = (beatTimer % 500) < 250 ? Math.sin((beatTimer % 500) / 250 * Math.PI) * 20 : 0;
+                    if (head && head.complete) {
+                        const { w, h } = getAdaptiveSize(head, canvas.width, canvas.height);
+                        ctx.drawImage(head, (canvas.width - w) / 2, (canvas.height - h) / 2 + offset, w, h);
+                    }
+                } else {
+                    const danger = assets.images.emma_danger;
+                    if (danger && danger.complete) {
+                        const { w, h } = getAdaptiveSize(danger, canvas.width, canvas.height);
+                        ctx.drawImage(danger, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                    }
                     ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = '#000000'; ctx.font = 'bold 40px "Noto Sans TC"';
                     ctx.shadowColor = "white"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
                     ctx.fillText("Huh?", centerX + 80, centerY - (canvas.height * 0.2)); ctx.restore();
                 }
             }
+            
             particles.forEach(p => p.draw(ctx));
             firecrackerTargets.forEach(t => t.draw(ctx));
         }

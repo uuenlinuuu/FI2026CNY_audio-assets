@@ -139,7 +139,7 @@
         /* Restart 按鈕容器 (最上層) */
         #restart-btn-wrapper {
             position: absolute;
-            bottom: 35%; 
+            bottom: 25%; /* 調整為畫面下方四分之一處 */
             width: 100%;
             display: flex;
             justify-content: center;
@@ -495,7 +495,7 @@
                     <p>當<span class="text-white">Emma</span>戴上耳機聽歌時，請瘋狂點擊叫<span class="text-white">Emma</span>，如果你吵到<span class="text-white">Emma</span>就輸了！！！！</p>
                     
                     <span class="title-bonus">Bonus Time</span>
-                    <p>點擊累計滿<span class="pixel-shift text-white">12</span>次就送鞭炮，每點一個鞭炮增加<span class="pixel-shift text-white">10</span>分，把握時間，拿越多鞭炮分數就越高！</p>
+                    <p>點擊累計滿<span class="pixel-shift text-white">12</span>次就送紅包，每一個紅包增加<span class="pixel-shift text-white">10</span>分，把握時間，拿越多紅包分數就越高！</p>
                 </div>
                 <button id="start-btn" class="retro-btn">START</button>
             </div>
@@ -982,24 +982,26 @@
                 ctx.save(); ctx.translate(centerX, centerY);
                 ctx.drawImage(turntable, -w/2, -h/2, w, h); ctx.restore();
             }
-            if (gameState !== 'GAMEOVER') {
-                if (emmaState === 'DJING') {
-                    const head = assets.images.emma_head, body = assets.images.emma_body;
-                    if (body && body.complete) {
-                        const { w, h } = getAdaptiveSize(body, canvas.width, canvas.height);
-                        ctx.drawImage(body, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-                    }
-                    const offset = (beatTimer % 500) < 250 ? Math.sin((beatTimer % 500) / 250 * Math.PI) * 20 : 0;
-                    if (head && head.complete) {
-                        const { w, h } = getAdaptiveSize(head, canvas.width, canvas.height);
-                        ctx.drawImage(head, (canvas.width - w) / 2, (canvas.height - h) / 2 + offset, w, h);
-                    }
-                } else {
-                    const danger = assets.images.emma_danger;
-                    if (danger && danger.complete) {
-                        const { w, h } = getAdaptiveSize(danger, canvas.width, canvas.height);
-                        ctx.drawImage(danger, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
-                    }
+            
+            // Draw Emma based on state regardless of GAME OVER
+            if (emmaState === 'DJING') {
+                const head = assets.images.emma_head, body = assets.images.emma_body;
+                if (body && body.complete) {
+                    const { w, h } = getAdaptiveSize(body, canvas.width, canvas.height);
+                    ctx.drawImage(body, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                }
+                const offset = (beatTimer % 500) < 250 ? Math.sin((beatTimer % 500) / 250 * Math.PI) * 20 : 0;
+                if (head && head.complete) {
+                    const { w, h } = getAdaptiveSize(head, canvas.width, canvas.height);
+                    ctx.drawImage(head, (canvas.width - w) / 2, (canvas.height - h) / 2 + offset, w, h);
+                }
+            } else {
+                const danger = assets.images.emma_danger;
+                if (danger && danger.complete) {
+                    const { w, h } = getAdaptiveSize(danger, canvas.width, canvas.height);
+                    ctx.drawImage(danger, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                }
+                if (gameState !== 'GAMEOVER') {
                     ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = '#000000'; ctx.font = 'bold 40px "Noto Sans TC"';
                     ctx.shadowColor = "white"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
                     ctx.fillText("Huh?", centerX + 80, centerY - (canvas.height * 0.2)); ctx.restore();

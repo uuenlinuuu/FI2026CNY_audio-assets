@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emma Sooooong</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #111;
+            font-family: 'Noto Sans TC', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            /* 防止行動裝置雙擊縮放，固定遊戲畫面 */
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 提升至最上層 */
+            z-index: 100; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; 
+        }
+
+        /* 復古風格視窗 (Start & Game Over) */
+        .screen.retro-theme {
+            background: #1a1a1a;
+            border: 4px solid #fff;
+            border-radius: 0; 
+            box-shadow: 8px 8px 0px #000; 
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 550px;
+            /* 4:5 比例 */
+            aspect-ratio: 4 / 5;
+            text-align: center;
+            pointer-events: auto;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen.retro-theme.active {
+            display: flex;
+        }
+
+        /* 結束畫面按鈕定位：至於整體畫面下方三分之一處 */
+        #game-over-screen.active {
+            position: absolute;
+            top: auto;
+            bottom: 33.3%;
+            transform: translateY(50%);
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            aspect-ratio: auto;
+            width: auto;
+        }
+
+        /* 標題放大設定 */
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #FFD700;
+            text-shadow: 8px 8px 0px #FF0000;
+            line-height: 1.1;
+            margin-bottom: 50px;
+            font-size: 11rem; 
+            white-space: nowrap;
+        }
+
+        /* 選單內文中英文字垂直置中 */
+        #start-screen p {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem; 
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #eee;
+            font-weight: 400;
+            text-shadow: 2px 2px 0 #000;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 1.8em;
+        }
+
+        /* 遊戲說明標題放大 */
+        .menu-title {
+            font-family: 'Press Start 2P', cursive;
+            font-weight: 400;
+            color: #FFD700;
+            font-size: 1.5rem; 
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        button.retro-btn {
+            border-radius: 0;
+            border: 3px solid #fff;
+            box-shadow: 4px 4px 0px #000;
+            font-family: 'Press Start 2P', cursive; 
+            font-weight: 400;
+            font-size: 1.2rem;
+            padding: 15px 30px;
+            background: #FF0000;
+            color: #fff;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px 0;
+            text-transform: uppercase;
+        }
+        
+        button.retro-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #000;
+        }
+
+        /* 鞭炮 UI 容器 - 保持與寬度縮放 */
+        #firecracker-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 30;
+            display: flex;
+            flex-direction: column-reverse; 
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            background-color: #FFFFFF;
+            width: 80px;
+            border-radius: 40px;
+            padding-bottom: 15px;
+            padding-top: 35px;
+        }
+
+        @media (orientation: portrait) {
+            #firecracker-wrapper {
+                width: 10vw;
+                border-radius: 5vw;
+                gap: 1.25vw;
+                padding-bottom: 1.8vw;
+                padding-top: 4.3vw;
+            }
+            #energy-bar-container {
+                width: 3vw !important;
+                gap: 0.5vw !important;
+            }
+            .energy-pixel {
+                height: 1.5vw !important;
+            }
+            #firecracker-btn {
+                width: 7.5vw !important;
+                height: 10.6vw !important;
+            }
+            h1 {
+                font-size: 22vw; 
+            }
+            .screen.retro-theme {
+                width: 92%;
+                padding: 1rem;
+            }
+            .menu-title {
+                font-size: 1.4rem;
+            }
+            #start-screen p {
+                font-size: 0.85rem;
+            }
+            button.retro-btn {
+                font-size: 1.1rem;
+            }
+        }
+
+        #energy-bar-container {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 4px; 
+            width: 24px;
+            background: transparent;
+            border: none;
+        }
+
+        .energy-pixel {
+            width: 100%;
+            height: 12px; 
+            background-color: #E5E5E5; 
+            transition: background-color 0.1s;
+        }
+
+        .energy-pixel.active {
+            background-color: #ff3300; 
+        }
+        
+        .energy-pixel.charged {
+            background-color: #FFD700; 
+        }
+
+        #firecracker-btn {
+            width: 60px;
+            height: 85px;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.3s;
+            filter: grayscale(100%) opacity(0.6); 
+            position: relative;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: rotate(30deg);
+        }
+        
+        .pixel-firecracker-svg {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.5));
+        }
+
+        #firecracker-btn.ready {
+            filter: grayscale(0%) opacity(1) drop-shadow(0 0 5px #FFD700);
+            animation: pulse-btn 0.5s infinite alternate;
+        }
+
+        @keyframes pulse-btn {
+            0% { transform: scale(1) rotate(30deg); }
+            100% { transform: scale(1.1) rotate(30deg); }
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #000;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 4rem; 
+            z-index: 5;
+            white-space: nowrap;
+            text-align: center;
+            text-shadow: 4px 4px 0 #00FF00, -4px -4px 0 #00FF00, 4px -4px 0 #00FF00, -4px 4px 0 #00FF00, 4px 0 0 #00FF00, -4px 0 0 #00FF00, 0 4px 0 #00FF00, 0 -4px 0 #00FF00;
+        }
+        
+        #difficulty-display {
+            position: absolute;
+            top: 110px; 
+            left: 50%;
+            transform: translateX(-50%);
+            color: #000;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem; 
+            z-index: 5;
+            white-space: nowrap;
+            text-align: center;
+            text-shadow: 2px 2px 0 #00FF00, -2px -2px 0 #00FF00, 2px -2px 0 #00FF00, -2px 2px 0 #00FF00, 2px 0 0 #00FF00, -2px 0 0 #00FF00, 0 2px 0 #00FF00, 0 -2px 0 #00FF00;
+        }
+        
+        /* Bonus Time 樣式更新：螢光綠底圖與置中 */
+        #bonus-msg {
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #39FF14; /* 螢光綠 */
+            color: #000; 
+            font-family: "Press Start 2P";
+            font-size: 1.2rem; /* 整體縮小 */
+            padding: 20px 40px;
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px #000;
+            z-index: 80; /* 高於分數 */
+            pointer-events: none;
+            display: none;
+            animation: blink 0.1s infinite;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        @keyframes blink { 0% {opacity:1} 50% {opacity:0.8} 100% {opacity:1} }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="score-display">0000</div>
+        <div id="difficulty-display">LV 1</div>
+        
+        <div id="bonus-msg">BONUS TIME!<br><span style="font-size: 0.7rem;">(CLICK FIRECRACKERS!)</span></div>
+
+        <div id="firecracker-wrapper">
+            <button id="firecracker-btn">
+                <svg class="pixel-firecracker-svg" viewBox="0 0 32 50" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 12 Q 16 6 12 6 Q 18 0 22 2" stroke="#000000" stroke-width="2" fill="none" stroke-linecap="round" />
+                    <path d="M6 12 L6 40 Q 16 48 26 40 L26 12 Z" fill="#CC0000" />
+                    <path d="M6 18 Q 16 23 26 18 L26 22 Q 16 27 6 22 Z" fill="#FFCC00" />
+                    <path d="M6 34 Q 16 39 26 34 L26 38 Q 16 43 6 38 Z" fill="#FFCC00" />
+                    <ellipse cx="16" cy="12" rx="10" ry="3.5" fill="#8B0000" />
+                    <path d="M22 13 L22 39" stroke="#FF4444" stroke-width="2" stroke-opacity="0.5" stroke-linecap="round" />
+                </svg>
+            </button>
+            <div id="energy-bar-container"></div>
+        </div>
+
+        <div id="ui-layer">
+            <!-- Start Screen -->
+            <div id="start-screen" class="screen retro-theme active">
+                <div style="text-align: center; margin: 10px 0;">
+                    <span class="menu-title">遊戲說明</span>
+                    <p>當Emma戴上耳機聽歌時，請瘋狂點擊叫Emma，如果你吵到Emma就輸了！！！！</p>
+                    
+                    <span class="menu-title" style="margin-top: 15px;">Bonus Time</span>
+                    <p>點擊累計滿12次就送紅包，每一個紅包增加10分，把握時間，拿越多紅包分數就越高！</p>
+                </div>
+                <button id="start-btn" class="retro-btn">START</button>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="game-over-screen" class="screen retro-theme">
+                <div style="width: 100%;">
+                    <button id="restart-btn" class="retro-btn">RESTART</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const YOUR_LINKS = {
+            bgm: 'https://cdn.jsdelivr.net/gh/uuenlinuuu/FI2026CNY_audio-assets@main/Fameimage_2026CNY_EmmaSong.mp3', 
+            click: 'https://cdn.jsdelivr.net/gh/uuenlinuuu/FI2026CNY_audio-assets@main/Audio_Emma.m4a',
+            firecracker: '' 
+        };
+
+        const YOUR_IMAGES = {
+            background: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/background.png', 
+            emma_head: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/emma_head.png',  
+            emma_body: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/emma_body.png',  
+            emma_danger: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/emma_danger.png',
+            turntable: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/turntable.png',
+            happy_new_year: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/happy_new_year.png',
+            speaker_left: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/speaker_left.png',  
+            speaker_right: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI2026CNY_image/speaker_right.png', 
+        };
+
+        function getAdaptiveSize(img, canvasWidth, canvasHeight) {
+            const isLandscape = canvasWidth > canvasHeight;
+            let scale = 1;
+            if (isLandscape) {
+                let targetH = Math.min(canvasHeight, img.naturalHeight);
+                scale = targetH / img.naturalHeight;
+            } else {
+                let targetW = Math.min(canvasWidth, img.naturalWidth);
+                scale = targetW / img.naturalWidth;
+            }
+            return { w: img.naturalWidth * scale, h: img.naturalHeight * scale };
+        }
+
+        function convertToDirectLink(url) {
+            if (!url) return null;
+            if (url.includes('drive.google.com') && url.includes('/view')) {
+                const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+            }
+            return url;
+        }
+
+        function drawFourPointStar(ctx, x, y, size) {
+            const outer = size;
+            const inner = size * 0.2; 
+            ctx.beginPath();
+            for(let i=0; i<4; i++) {
+                const angle = (i * Math.PI / 2) - (Math.PI / 2);
+                const nextAngle = ((i + 1) * Math.PI / 2) - (Math.PI / 2);
+                const tipX = x + Math.cos(angle) * outer;
+                const tipY = y + Math.sin(angle) * outer;
+                const nextTipX = x + Math.cos(nextAngle) * outer;
+                const nextTipY = y + Math.sin(nextAngle) * outer;
+                const midAngle = angle + (Math.PI / 4);
+                const ctrlX = x + Math.cos(midAngle) * inner;
+                const ctrlY = y + Math.sin(midAngle) * inner;
+                if (i === 0) ctx.moveTo(tipX, tipY);
+                ctx.quadraticCurveTo(ctrlX, ctrlY, nextTipX, nextTipY);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        let explosionShakeTime = 0;
+
+        function drawStars(ctx) {
+            const scaleX = Math.abs(Math.sin(Date.now() * 0.002)); 
+            let starColor = '#00ff00';
+            let shakeX = 0, shakeY = 0;
+            if (explosionShakeTime > 0) {
+                starColor = Math.floor(Date.now() / 50) % 2 === 0 ? '#FF00FF' : '#00FFFF';
+                shakeX = (Math.random() - 0.5) * 20;
+                shakeY = (Math.random() - 0.5) * 20;
+            }
+            ctx.fillStyle = starColor;
+            const gap = 180;     
+            for(let y = 0; y < ctx.canvas.height + gap; y += gap) {
+                for(let x = 0; x < ctx.canvas.width + gap; x += gap) {
+                    let offsetX = (Math.floor(y / gap) % 2 === 0) ? 0 : gap/2;
+                    ctx.save();
+                    ctx.translate(x + offsetX + shakeX, y + shakeY); 
+                    ctx.scale(scaleX, 1); 
+                    drawFourPointStar(ctx, 0, 0, 80);
+                    ctx.restore();
+                }
+            }
+        }
+
+        function drawBackground(ctx) {
+            ctx.fillStyle = '#D3D3D3';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            drawStars(ctx);
+        }
+
+        const assets = { images: {} };
+        function preloadImages() {
+            for (const [key, url] of Object.entries(YOUR_IMAGES)) {
+                if (url && url.trim() !== '') {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.src = url;
+                    assets.images[key] = img;
+                }
+            }
+        }
+        preloadImages();
+
+        class SoundManager {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.volume = 0.3;
+                this.isBGMPlaying = false;
+                this.bgmTimer = null;
+                this.configBgmUrl = convertToDirectLink(YOUR_LINKS.bgm);
+                this.configClickUrl = convertToDirectLink(YOUR_LINKS.click);
+                this.customBgmAudio = null;
+                this.customClickAudio = null;
+                this.playPromise = null;
+            }
+            ensureContext() { if (this.ctx.state === 'suspended') this.ctx.resume(); }
+            playTone(freq, type, duration, vol = this.volume) {
+                this.ensureContext();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+            init() {
+                if (this.configBgmUrl) {
+                    this.customBgmAudio = new Audio(this.configBgmUrl);
+                    this.customBgmAudio.loop = true;
+                    this.customBgmAudio.volume = 0.6;
+                }
+                if (this.configClickUrl) {
+                    this.customClickAudio = new Audio(this.configClickUrl);
+                    this.customClickAudio.volume = 1.0;
+                }
+            }
+            playClickNote() {
+                this.ensureContext();
+                if (this.customClickAudio) {
+                    const clone = this.customClickAudio.cloneNode();
+                    clone.playbackRate = 0.8 + Math.random() * 0.6;
+                    clone.play().catch(() => {});
+                    return;
+                }
+                this.playSynthClick();
+            }
+            playSynthClick() {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+            }
+            playFirecracker() {
+                this.ensureContext();
+                this.playTone(150, 'sawtooth', 0.5, 0.4);
+            }
+            async startBGM() {
+                if (this.isBGMPlaying) return;
+                this.isBGMPlaying = true;
+                if (this.customBgmAudio) {
+                    this.playPromise = this.customBgmAudio.play();
+                    try {
+                        await this.playPromise;
+                    } catch (error) {}
+                }
+            }
+            async stopBGM() {
+                this.isBGMPlaying = false;
+                if (this.customBgmAudio) {
+                    if (this.playPromise !== undefined) {
+                        try {
+                            await this.playPromise;
+                        } catch (e) {}
+                    }
+                    this.customBgmAudio.pause();
+                }
+            }
+            playAlert() { this.playTone(800, 'sawtooth', 0.1, 0.3); }
+            playLose() { 
+                this.stopBGM(); 
+                if (this.customBgmAudio) this.customBgmAudio.currentTime = 0; 
+                this.playTone(100, 'square', 0.5, 0.4); 
+            }
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const uiContainer = document.getElementById('game-container');
+        const scoreEl = document.getElementById('score-display');
+        const diffEl = document.getElementById('difficulty-display');
+        const bonusMsg = document.getElementById('bonus-msg');
+        const sound = new SoundManager();
+
+        let gameState = 'MENU', emmaState = 'DJING', score = 0, difficulty = 1, lastTime = 0;
+        let stateTimer = 0, nextStateChange = 2000, particles = [], firecrackerTargets = [], beatTimer = 0;
+        let energy = 0; const maxEnergy = 12;
+        let isBonusTime = false, bonusTimer = 0, bonusCollectionCount = 0, isExplodingBonus = false;
+
+        const energyContainer = document.getElementById('energy-bar-container');
+        for (let i = 0; i < maxEnergy; i++) {
+            const div = document.createElement('div'); div.className = 'energy-pixel';
+            energyContainer.appendChild(div);
+        }
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        function updateEnergyUI() {
+            const btn = document.getElementById('firecracker-btn');
+            const pixels = document.querySelectorAll('.energy-pixel');
+            pixels.forEach((p, i) => {
+                p.classList.toggle('active', i < energy);
+                p.classList.toggle('charged', energy >= maxEnergy && i < energy);
+            });
+            btn.classList.toggle('ready', energy >= maxEnergy);
+        }
+
+        class FirecrackerTarget {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 40) + 20; this.y = -50;
+                this.vy = 2 + Math.random() * 2; this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.1;
+            }
+            update() { this.y += this.vy; this.rotation += this.rotSpeed; }
+            draw(ctx) {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+                ctx.fillStyle = '#CC0000'; ctx.fillRect(-15, -25, 30, 50);
+                ctx.fillStyle = '#FFCC00'; ctx.fillRect(-15, -20, 30, 5); ctx.fillRect(-15, 15, 30, 5);
+                ctx.restore();
+            }
+            hitTest(mx, my) { return Math.sqrt((mx - this.x)**2 + (my - this.y)**2) < 60; }
+        }
+
+        class Particle {
+            constructor(x, y, text, isStatic = false) {
+                this.x = x; this.y = y; this.text = text;
+                this.vx = isStatic ? 0 : (Math.random() - 0.5) * 4;
+                this.vy = isStatic ? -2 : -1.5 - Math.random() * 2.5;
+                this.life = 1.0; this.size = isStatic ? 40 : 20 + Math.random() * 20;
+                this.rotation = isStatic ? 0 : Math.random() * Math.PI * 2;
+                this.isStatic = isStatic;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life -= 0.005; }
+            draw(ctx) {
+                ctx.save(); ctx.globalAlpha = Math.max(0, this.life);
+                ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+                ctx.font = `${this.size}px ${this.text.length > 2 ? 'serif' : '"Press Start 2P"'}`;
+                ctx.fillStyle = '#000000'; ctx.fillText(this.text, 0, 0); ctx.restore();
+            }
+        }
+
+        function startGame() {
+            sound.init(); 
+            // 重新開始遊玩時，音樂重頭開始播放
+            if (sound.customBgmAudio) {
+                sound.customBgmAudio.currentTime = 0;
+            }
+            score = 0; difficulty = 1; gameState = 'PLAYING';
+            emmaState = 'DJING'; stateTimer = 0; particles = []; firecrackerTargets = [];
+            isBonusTime = false; energy = 0; updateEnergyUI();
+            scoreEl.innerText = '0000'; diffEl.innerText = 'LV 1';
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('game-over-screen').classList.remove('active');
+            sound.startBGM(); requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER'; sound.playLose();
+            document.getElementById('game-over-screen').classList.add('active');
+        }
+
+        function spawnExplosionAt(x, y) {
+            explosionShakeTime = 0.5; sound.playFirecracker();
+            for (let i = 0; i < 5; i++) particles.push(new Particle(x, y, "💥"));
+        }
+
+        function startBonusMode() {
+            isBonusTime = true; bonusTimer = 5000; energy = 0; bonusCollectionCount = 0;
+            updateEnergyUI(); bonusMsg.style.display = 'block';
+        }
+
+        function processBonusExplosions(count) {
+            isExplodingBonus = true; let explodedCount = 0;
+            const interval = setInterval(() => {
+                if (gameState !== 'PLAYING') { clearInterval(interval); return; }
+                score += 10; scoreEl.innerText = String(score).padStart(4, '0');
+                spawnExplosionAt(canvas.width / 2 + (Math.random()-0.5)*150, canvas.height / 2 + (Math.random()-0.5)*150);
+                if (++explodedCount >= count) { clearInterval(interval); isExplodingBonus = false; sound.startBGM(); }
+            }, 200);
+        }
+
+        function handleClick(e) {
+            if (gameState !== 'PLAYING' || isExplodingBonus) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const clickY = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+            if (isBonusTime) {
+                for (let i = firecrackerTargets.length - 1; i >= 0; i--) {
+                    if (firecrackerTargets[i].hitTest(clickX, clickY)) {
+                        bonusCollectionCount++; particles.push(new Particle(firecrackerTargets[i].x, firecrackerTargets[i].y, "+1", true));
+                        firecrackerTargets.splice(i, 1); return;
+                    }
+                }
+                return;
+            }
+
+            if (emmaState === 'DJING') {
+                score++; scoreEl.innerText = String(score).padStart(4, '0');
+                if (energy < maxEnergy) { energy++; updateEnergyUI(); if (energy >= maxEnergy) startBonusMode(); }
+                sound.playClickNote();
+                particles.push(new Particle(clickX, clickY, "Emma"[Math.floor(Math.random()*4)]));
+                if (score % 5 === 0) { difficulty++; diffEl.innerText = `LV ${difficulty}`; }
+            } else { gameOver(); }
+        }
+
+        window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON') handleClick(e); });
+        window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON') handleClick(e); }, {passive: false});
+
+        function gameLoop(timestamp) {
+            if (gameState !== 'PLAYING' && gameState !== 'GAMEOVER') return;
+            const dt = timestamp - lastTime; lastTime = timestamp;
+            update(dt); draw(); requestAnimationFrame(gameLoop);
+        }
+
+        function update(dt) {
+            if (gameState === 'GAMEOVER') return;
+            stateTimer += dt; beatTimer += dt;
+            if (explosionShakeTime > 0) explosionShakeTime -= dt / 1000;
+            if (isBonusTime) {
+                bonusTimer -= dt;
+                if (bonusTimer <= 0) {
+                    isBonusTime = false; bonusMsg.style.display = 'none';
+                    if (bonusCollectionCount > 0) processBonusExplosions(bonusCollectionCount); else sound.startBGM();
+                } else if (Math.random() < 0.06) firecrackerTargets.push(new FirecrackerTarget());
+            }
+            firecrackerTargets.forEach((t, i) => { t.update(); if (t.y > canvas.height) firecrackerTargets.splice(i, 1); });
+            if (!isBonusTime && !isExplodingBonus && stateTimer > nextStateChange) {
+                stateTimer = 0;
+                if (emmaState === 'DJING') {
+                    emmaState = 'LISTENING'; sound.stopBGM(); sound.playAlert();
+                    nextStateChange = Math.random() * 1000 + Math.max(200, 500 - difficulty * 30);
+                } else {
+                    emmaState = 'DJING'; sound.startBGM();
+                    nextStateChange = Math.max(500, 2500 - (difficulty * 200)) + Math.random() * 500;
+                }
+            }
+            particles.forEach((p, i) => { p.update(); if (p.life <= 0) particles.splice(i, 1); });
+        }
+
+        function draw() {
+            const centerX = canvas.width / 2, centerY = canvas.height / 2;
+            const bgImg = assets.images.background;
+            if (bgImg && bgImg.complete) {
+                const ratio = Math.max(canvas.width / bgImg.naturalWidth, canvas.height / bgImg.naturalHeight);
+                ctx.drawImage(bgImg, (canvas.width - bgImg.naturalWidth * ratio) / 2, (canvas.height - bgImg.naturalHeight * ratio) / 2, bgImg.naturalWidth * ratio, bgImg.naturalHeight * ratio);
+            } else drawBackground(ctx);
+            drawStars(ctx);
+
+            const turntable = assets.images.turntable;
+            if (turntable && turntable.complete) {
+                const { w, h } = getAdaptiveSize(turntable, canvas.width, canvas.height);
+                ctx.save(); ctx.translate(centerX, centerY);
+                ctx.drawImage(turntable, -w/2, -h/2, w, h); ctx.restore();
+            }
+
+            if (emmaState === 'DJING') {
+                const head = assets.images.emma_head, body = assets.images.emma_body;
+                if (body && body.complete) {
+                    const { w, h } = getAdaptiveSize(body, canvas.width, canvas.height);
+                    ctx.drawImage(body, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                }
+                const offset = (beatTimer % 500) < 250 ? Math.sin((beatTimer % 500) / 250 * Math.PI) * 20 : 0;
+                if (head && head.complete) {
+                    const { w, h } = getAdaptiveSize(head, canvas.width, canvas.height);
+                    ctx.drawImage(head, (canvas.width - w) / 2, (canvas.height - h) / 2 + offset, w, h);
+                }
+            } else {
+                const danger = assets.images.emma_danger;
+                if (danger && danger.complete) {
+                    const { w, h } = getAdaptiveSize(danger, canvas.width, canvas.height);
+                    ctx.drawImage(danger, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                }
+                if (gameState !== 'GAMEOVER') {
+                    ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = '#000000'; ctx.font = 'bold 40px "Noto Sans TC"';
+                    ctx.shadowColor = "white"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+                    ctx.fillText("Huh?", centerX + 80, centerY - (canvas.height * 0.2)); ctx.restore();
+                }
+            }
+            firecrackerTargets.forEach(t => t.draw(ctx));
+            particles.forEach(p => p.draw(ctx));
+        }
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', startGame);
+    </script>
+</body>
+</html>

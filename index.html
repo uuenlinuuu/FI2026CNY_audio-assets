@@ -115,7 +115,7 @@
 
         #start-screen p {
             font-family: 'Press Start 2P', cursive;
-            font-size: 1rem; 
+            font-size: 1.3rem; 
             line-height: 1.8;
             margin-bottom: 20px;
             color: #ccc;
@@ -137,11 +137,23 @@
             margin: 0 3px;
         }
 
-        .menu-title {
+        /* --- 標題設定 --- */
+        .title-instructions {
+            font-family: 'Press Start 2P', cursive;
+            font-weight: 400;
+            color: #FFD700;
+            font-size: 2rem; 
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        .title-bonus {
             font-family: 'Press Start 2P', cursive;
             font-weight: 400;
             color: #FFD700;
             font-size: 1.5rem; 
+            margin-top: 20px;
             margin-bottom: 15px;
             display: block;
             text-align: center;
@@ -171,7 +183,7 @@
         /* 鞭炮 UI 容器 */
         #firecracker-wrapper {
             position: absolute;
-            bottom: 130px; /* 提升位置以避開 Footer */
+            bottom: 150px; 
             left: 20px;
             z-index: 30;
             display: flex;
@@ -193,7 +205,7 @@
                 gap: 1.5vw;
                 padding-bottom: 2vw;
                 padding-top: 5vw;
-                bottom: 110px; /* 手機模式下的位置 */
+                bottom: 150px; 
                 left: 15px;
             }
             #energy-bar-container {
@@ -214,33 +226,13 @@
                 width: 92%;
                 padding: 1.5rem;
             }
-            .menu-title {
-                font-size: 1.4rem;
-            }
-            #start-screen p {
-                font-size: 0.85rem;
-            }
-            button.retro-btn {
-                font-size: 1.1rem;
-            }
-            
-            /* 行動版分數與難度位置微調 */
-            #score-display {
-                top: 30px !important;
-                font-size: 4rem !important;
-            }
-            #difficulty-display {
-                top: 120px !important;
-            }
-
-            footer {
-                padding: 5px 5px !important;
-                background-color: rgba(0,0,0,0.7); /* 增加背景深度 */
-            }
-            #ad-banner-slot {
-                height: 70px !important;
-                margin-bottom: 5px !important;
-            }
+            .title-instructions { font-size: 1.4rem; }
+            .title-bonus { font-size: 1.4rem; }
+            #start-screen p { font-size: 0.8rem; }
+            button.retro-btn { font-size: 1.1rem; }
+            #score-display { top: 30px !important; font-size: 4rem !important; }
+            footer { padding: 5px 5px !important; bottom: 5px !important; }
+            #ad-banner-slot { width: 90% !important; height: 70px !important; margin-bottom: 5px !important; }
         }
 
         #energy-bar-container {
@@ -259,13 +251,8 @@
             transition: background-color 0.1s;
         }
 
-        .energy-pixel.active {
-            background-color: #ff3300; 
-        }
-        
-        .energy-pixel.charged {
-            background-color: #FFD700; 
-        }
+        .energy-pixel.active { background-color: #ff3300; }
+        .energy-pixel.charged { background-color: #FFD700; }
 
         #firecracker-btn {
             width: 60px;
@@ -355,44 +342,81 @@
         /* Footer */
         footer {
             position: absolute;
-            bottom: 20px;
+            bottom: 8px;
             left: 0;
             width: 100%;
             background-color: transparent;
-            padding: 30px 10px;
+            padding: 10px 10px;
             text-align: center;
             z-index: 110;
             pointer-events: auto; 
             box-sizing: border-box;
         }
 
+        /* 廣告輪播容器 */
         #ad-banner-slot {
+            position: relative;
             width: 100%;
             max-width: 728px;
             height: 110px;
-            background-color: rgba(26, 26, 26, 0.8);
-            margin: 0 auto 10px;
+            margin: 0 auto 8px;
             border: 1px dashed #444;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #888;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        .ad-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            cursor: pointer;
+            pointer-events: none;
+        }
+
+        .ad-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .ad-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ad-placeholder {
+            color: #eee; /* 改為淺色方便在不同底色下閱讀 */
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 2px;
+            text-align: center;
+            padding: 10px;
+            text-shadow: 1px 1px 2px #000;
         }
 
         .footer-text {
             color: #ccc;
             font-size: 0.75rem;
             line-height: 1.4;
-            margin: 2px 0;
+            margin: 1px 0;
             letter-spacing: 0.7px;
+            text-shadow: 1px 1px 3px #000;
         }
 
         .special-thanks {
             color: #fff;
             letter-spacing: 0.7px;
+            text-shadow: 1px 1px 3px #000;
         }
     </style>
 </head>
@@ -421,17 +445,19 @@
         </div>
 
         <div id="ui-layer">
+            <!-- Start Screen -->
             <div id="start-screen" class="screen retro-theme active">
                 <div style="text-align: center; margin: 10px 0;">
-                    <span class="menu-title">遊戲說明</span>
-                    <p>當<span class="pixel-shift text-white">Emma</span>戴上耳機聽歌時，請瘋狂點擊叫<span class="pixel-shift text-white">Emma</span>，如果你吵到<span class="pixel-shift text-white">Emma</span>就輸了！！！！</p>
+                    <span class="title-instructions">遊戲說明</span>
+                    <p>當<span class="text-white">Emma</span>戴上耳機聽歌時，請瘋狂點擊叫<span class="text-white">Emma</span>，如果你吵到<span class="text-white">Emma</span>就輸了！！！！</p>
                     
-                    <span class="menu-title" style="margin-top: 20px;">Bonus Time</span>
+                    <span class="title-bonus">Bonus Time</span>
                     <p>點擊累計滿<span class="pixel-shift text-white">12</span>次就送紅包，每一個紅包增加<span class="pixel-shift text-white">10</span>分，把握時間，拿越多紅包分數就越高！</p>
                 </div>
                 <button id="start-btn" class="retro-btn">START</button>
             </div>
 
+            <!-- Game Over Screen -->
             <div id="game-over-screen" class="screen retro-theme">
                 <div style="width: 100%;">
                     <button id="restart-btn" class="retro-btn">RESTART</button>
@@ -439,14 +465,24 @@
             </div>
         </div>
 
+        <!-- Footer -->
         <footer>
-            <div id="ad-banner-slot">( 徵！！歡迎各大廠商報名謝謝 )</div>
+            <div id="ad-banner-slot">
+                <!-- 輪播內容由 JavaScript 動態生成 -->
+            </div>
             <p class="footer-text">Copyright © Fameimage 2026.</p>
             <p class="footer-text">Special Thanks | <span class="special-thanks">wodalang</span></p>
         </footer>
     </div>
 
     <script>
+        // --- 廣告數據配置 (包含底色設定) ---
+        const AD_DATA = [
+            { img: 'https://raw.githubusercontent.com/uuenlinuuu/FI2026CNY_audio-assets/refs/heads/FI-ad/ad-01.png', url: 'https://www.instagram.com/fi_hahahaha/' }, // 廣告 1 (深紅)
+            { img: '', url: 'https://www.google.com', color: '#0a3d0a' }, // 廣告 2 (深綠)
+            { img: '', url: 'https://www.google.com', color: '#0a0a3d' }  // 廣告 3 (深藍)
+        ];
+
         const YOUR_LINKS = {
             bgm: 'https://cdn.jsdelivr.net/gh/uuenlinuuu/FI2026CNY_audio-assets@main/Fameimage_2026CNY_EmmaSong.mp3', 
             click: 'https://cdn.jsdelivr.net/gh/uuenlinuuu/FI2026CNY_audio-assets@main/Audio_Emma.m4a',
@@ -467,6 +503,42 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const gameContainer = document.getElementById('game-container');
+
+        // --- 廣告輪播功能 ---
+        function initAdCarousel() {
+            const slot = document.getElementById('ad-banner-slot');
+            slot.innerHTML = ''; 
+
+            AD_DATA.forEach((ad, index) => {
+                const slide = document.createElement('div');
+                slide.className = `ad-slide ${index === 0 ? 'active' : ''}`;
+                slide.style.backgroundColor = ad.color; // 套用底色
+                slide.onclick = () => window.open(ad.url, '_blank');
+
+                if (ad.img && ad.img.trim() !== '') {
+                    const image = new Image();
+                    image.src = ad.img;
+                    slide.appendChild(image);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'ad-placeholder';
+                    placeholder.innerText = `( 廣告刊登中 - ${index + 1} )\n歡迎各大廠商報名謝謝`;
+                    slide.appendChild(placeholder);
+                }
+                slot.appendChild(slide);
+            });
+
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.ad-slide');
+            
+            if (slides.length > 1) {
+                setInterval(() => {
+                    slides[currentSlide].classList.remove('active');
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    slides[currentSlide].classList.add('active');
+                }, 5000); 
+            }
+        }
 
         function getAdaptiveSize(img, canvasWidth, canvasHeight) {
             const isLandscape = canvasWidth > canvasHeight;
@@ -554,6 +626,7 @@
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 this.volume = 0.3;
                 this.isBGMPlaying = false;
+                this.bgmTimer = null;
                 this.configBgmUrl = convertToDirectLink(YOUR_LINKS.bgm);
                 this.configClickUrl = convertToDirectLink(YOUR_LINKS.click);
                 this.customBgmAudio = null;
@@ -655,7 +728,6 @@
         }
 
         function resize() { 
-            // 直接抓取 window 尺寸確保滿版
             canvas.width = window.innerWidth; 
             canvas.height = window.innerHeight; 
         }
@@ -712,9 +784,7 @@
 
         function startGame() {
             sound.init(); 
-            if (sound.customBgmAudio) {
-                sound.customBgmAudio.currentTime = 0;
-            }
+            if (sound.customBgmAudio) sound.customBgmAudio.currentTime = 0;
             score = 0; difficulty = 1; gameState = 'PLAYING';
             emmaState = 'DJING'; stateTimer = 0; particles = []; firecrackerTargets = [];
             isBonusTime = false; energy = 0; updateEnergyUI();
@@ -752,7 +822,6 @@
         function handleClick(e) {
             if(e.target.closest('button') || e.target.closest('footer')) return; 
             if (gameState !== 'PLAYING' || isExplodingBonus) return;
-            
             const rect = canvas.getBoundingClientRect();
             const clickX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const clickY = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -812,18 +881,14 @@
 
         function draw() {
             const centerX = canvas.width / 2, centerY = canvas.height / 2;
-            
             const bgImg = assets.images.background;
             if (bgImg && bgImg.complete) {
                 const ratio = Math.max(canvas.width / bgImg.naturalWidth, canvas.height / bgImg.naturalHeight);
-                const drawW = bgImg.naturalWidth * ratio;
-                const drawH = bgImg.naturalHeight * ratio;
+                const drawW = bgImg.naturalWidth * ratio; const drawH = bgImg.naturalHeight * ratio;
                 ctx.drawImage(bgImg, (canvas.width - drawW) / 2, (canvas.height - drawH) / 2, drawW, drawH);
             } else {
-                ctx.fillStyle = '#D3D3D3';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#D3D3D3'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
-            
             drawStars(ctx);
 
             const speakerL = assets.images.speaker_left, speakerR = assets.images.speaker_right;
@@ -866,11 +931,11 @@
                     ctx.fillText("Huh?", centerX + 80, centerY - (canvas.height * 0.2)); ctx.restore();
                 }
             }
-            
             particles.forEach(p => p.draw(ctx));
             firecrackerTargets.forEach(t => t.draw(ctx));
         }
 
+        window.onload = () => { initAdCarousel(); };
         document.getElementById('start-btn').addEventListener('click', startGame);
         document.getElementById('restart-btn').addEventListener('click', startGame);
     </script>

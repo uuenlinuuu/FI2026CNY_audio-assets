@@ -2,37 +2,43 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Emma Sooooong</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        /* 使用 100% 替代 100vh 以修復行動裝置裁切問題 */
         html, body {
             height: 100%;
+            width: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            background-color: #000;
         }
 
         body {
-            overflow: hidden;
-            background-color: #111;
             font-family: 'Noto Sans TC', sans-serif;
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         #game-container {
             position: relative;
-            width: 100vw;
-            height: 100vh; /* 佔滿全螢幕高度 */
+            width: 100%;
+            height: 100%; 
             background: #000;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            box-sizing: border-box;
         }
 
         canvas {
@@ -53,7 +59,7 @@
             pointer-events: none; 
         }
 
-        /* 復古風格視窗 (Start & Game Over) */
+        /* 復古風格視窗 */
         .screen.retro-theme {
             background: #1a1a1a;
             border: 4px solid #fff;
@@ -62,9 +68,8 @@
             padding: 2.5rem;
             width: 90%;
             max-width: 550px;
-            /* 電腦版高度優化：根據內容調整 */
             height: auto;
-            max-height: 70vh;
+            max-height: 70%;
             overflow-y: auto;
             text-align: center;
             pointer-events: auto;
@@ -74,11 +79,10 @@
             align-items: center;
         }
 
-        /* 手機直向時恢復 4:5 比例 */
         @media (orientation: portrait) {
             .screen.retro-theme {
                 aspect-ratio: 4 / 5;
-                max-height: 85vh;
+                max-height: 75%;
             }
         }
 
@@ -89,7 +93,7 @@
         #game-over-screen.active {
             position: absolute;
             top: auto;
-            bottom: 33.3%;
+            bottom: 35%;
             transform: translateY(50%);
             border: none;
             background: transparent;
@@ -97,7 +101,6 @@
             padding: 0;
             aspect-ratio: auto;
             width: auto;
-            max-height: none;
         }
 
         h1 {
@@ -110,7 +113,6 @@
             white-space: nowrap;
         }
 
-        /* Menu 內文樣式 */
         #start-screen p {
             font-family: 'Press Start 2P', cursive;
             font-size: 1rem; 
@@ -122,7 +124,6 @@
             text-align: center;
         }
 
-        /* 英文字與數字下移調整，並增加左右 3px 的間距 */
         .pixel-shift {
             display: inline-block;
             transform: translateY(3px);
@@ -132,7 +133,8 @@
         .text-white {
             color: #FFFFFF !important;
             display: inline-block;
-            margin: 0 2px;
+            transform: translateY(3px);
+            margin: 0 3px;
         }
 
         .menu-title {
@@ -166,9 +168,10 @@
             box-shadow: 0px 0px 0px #000;
         }
 
+        /* 鞭炮 UI 容器 */
         #firecracker-wrapper {
             position: absolute;
-            bottom: 20px;
+            bottom: 130px; /* 提升位置以避開 Footer */
             left: 20px;
             z-index: 30;
             display: flex;
@@ -183,25 +186,26 @@
             padding-top: 35px;
         }
 
-        /* 遊戲元素響應式細節 */
         @media (orientation: portrait) {
             #firecracker-wrapper {
-                width: 10vw;
-                border-radius: 5vw;
-                gap: 1.25vw;
-                padding-bottom: 1.8vw;
-                padding-top: 4.3vw;
+                width: 12vw;
+                border-radius: 6vw;
+                gap: 1.5vw;
+                padding-bottom: 2vw;
+                padding-top: 5vw;
+                bottom: 110px; /* 手機模式下的位置 */
+                left: 15px;
             }
             #energy-bar-container {
-                width: 3vw !important;
-                gap: 0.5vw !important;
+                width: 4vw !important;
+                gap: 0.8vw !important;
             }
             .energy-pixel {
-                height: 1.5vw !important;
+                height: 1.8vw !important;
             }
             #firecracker-btn {
-                width: 7.5vw !important;
-                height: 10.6vw !important;
+                width: 9vw !important;
+                height: 12.7vw !important;
             }
             h1 {
                 font-size: 22vw; 
@@ -219,18 +223,23 @@
             button.retro-btn {
                 font-size: 1.1rem;
             }
+            
+            /* 行動版分數與難度位置微調 */
+            #score-display {
+                top: 10px !important;
+                font-size: 3rem !important;
+            }
+            #difficulty-display {
+                top: 90px !important;
+            }
 
-            /* 手機版 Footer 優化，維持透明 */
             footer {
-                padding: 8px 5px !important;
+                padding: 5px 5px !important;
+                background-color: rgba(0,0,0,0.7); /* 增加背景深度 */
             }
             #ad-banner-slot {
                 height: 50px !important;
                 margin-bottom: 5px !important;
-                font-size: 0.6rem !important;
-            }
-            .footer-text {
-                font-size: 0.65rem !important;
             }
         }
 
@@ -280,7 +289,6 @@
             width: 100%;
             height: 100%;
             image-rendering: pixelated;
-            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.5));
         }
 
         #firecracker-btn.ready {
@@ -344,17 +352,18 @@
         
         @keyframes blink { 0% {opacity:1} 50% {opacity:0.8} 100% {opacity:1} }
 
-        /* Footer 樣式：完全透明背景 */
+        /* Footer */
         footer {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: transparent; /* 改為透明 */
+            background-color: transparent;
             padding: 15px 10px;
             text-align: center;
             z-index: 110;
             pointer-events: auto; 
+            box-sizing: border-box;
         }
 
         #ad-banner-slot {
@@ -379,7 +388,6 @@
             line-height: 1.4;
             margin: 2px 0;
             letter-spacing: 0.7px;
-            /* 增加陰影確保文字在不同背景色上都能閱讀 */
             text-shadow: 1px 1px 3px #000; 
         }
 
@@ -416,11 +424,10 @@
         </div>
 
         <div id="ui-layer">
-            <!-- Start Screen -->
             <div id="start-screen" class="screen retro-theme active">
                 <div style="text-align: center; margin: 10px 0;">
                     <span class="menu-title">遊戲說明</span>
-                    <p>當<span class="text-white">Emma</span>戴上耳機聽歌時，請瘋狂點擊叫<span class="text-white">Emma</span>，如果你吵到<span class="text-white">Emma</span>就輸了！！！！</p>
+                    <p>當<span class="pixel-shift text-white">Emma</span>戴上耳機聽歌時，請瘋狂點擊叫<span class="pixel-shift text-white">Emma</span>，如果你吵到<span class="pixel-shift text-white">Emma</span>就輸了！！！！</p>
                     
                     <span class="menu-title" style="margin-top: 20px;">Bonus Time</span>
                     <p>點擊累計滿<span class="pixel-shift text-white">12</span>次就送紅包，每一個紅包增加<span class="pixel-shift text-white">10</span>分，把握時間，拿越多紅包分數就越高！</p>
@@ -428,7 +435,6 @@
                 <button id="start-btn" class="retro-btn">START</button>
             </div>
 
-            <!-- Game Over Screen -->
             <div id="game-over-screen" class="screen retro-theme">
                 <div style="width: 100%;">
                     <button id="restart-btn" class="retro-btn">RESTART</button>
@@ -436,7 +442,6 @@
             </div>
         </div>
 
-        <!-- Footer 絕對定位壓在畫布上 -->
         <footer>
             <div id="ad-banner-slot">( 徵！！歡迎各大廠商報名謝謝 )</div>
             <p class="footer-text">Copyright © Fameimage 2026.</p>
@@ -552,7 +557,6 @@
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 this.volume = 0.3;
                 this.isBGMPlaying = false;
-                this.bgmTimer = null;
                 this.configBgmUrl = convertToDirectLink(YOUR_LINKS.bgm);
                 this.configClickUrl = convertToDirectLink(YOUR_LINKS.click);
                 this.customBgmAudio = null;
@@ -654,6 +658,7 @@
         }
 
         function resize() { 
+            // 直接抓取 window 尺寸確保滿版
             canvas.width = window.innerWidth; 
             canvas.height = window.innerHeight; 
         }

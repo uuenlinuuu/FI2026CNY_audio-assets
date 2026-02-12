@@ -22,14 +22,12 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
-            display: flex;
-            flex-direction: column;
         }
 
         #game-container {
-            flex-grow: 1;
             position: relative;
             width: 100vw;
+            height: 100vh; /* 佔滿全螢幕高度 */
             background: #000;
             overflow: hidden;
             display: flex;
@@ -76,6 +74,7 @@
             align-items: center;
         }
 
+        /* 手機直向時恢復 4:5 比例 */
         @media (orientation: portrait) {
             .screen.retro-theme {
                 aspect-ratio: 4 / 5;
@@ -123,7 +122,7 @@
             text-align: center;
         }
 
-        /* 英文字與數字下移調整 */
+        /* 英文字與數字下移調整，並增加左右 3px 的間距 */
         .pixel-shift {
             display: inline-block;
             transform: translateY(3px);
@@ -167,7 +166,6 @@
             box-shadow: 0px 0px 0px #000;
         }
 
-        /* 鞭炮 UI 容器 */
         #firecracker-wrapper {
             position: absolute;
             bottom: 20px;
@@ -210,7 +208,7 @@
             }
             .screen.retro-theme {
                 width: 92%;
-                padding: 1rem;
+                padding: 1.5rem;
             }
             .menu-title {
                 font-size: 1.4rem;
@@ -222,13 +220,13 @@
                 font-size: 1.1rem;
             }
 
-            /* 手機版 Footer 優化，縮小高度 */
+            /* 手機版 Footer 優化，維持透明 */
             footer {
                 padding: 8px 5px !important;
             }
             #ad-banner-slot {
                 height: 50px !important;
-                margin-bottom: 8px !important;
+                margin-bottom: 5px !important;
                 font-size: 0.6rem !important;
             }
             .footer-text {
@@ -346,41 +344,50 @@
         
         @keyframes blink { 0% {opacity:1} 50% {opacity:0.8} 100% {opacity:1} }
 
+        /* Footer 樣式：完全透明背景 */
         footer {
-            background-color: #000;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: transparent; /* 改為透明 */
             padding: 15px 10px;
             text-align: center;
-            border-top: none; 
             z-index: 110;
+            pointer-events: auto; 
         }
 
         #ad-banner-slot {
             width: 100%;
             max-width: 728px;
             height: 90px;
-            background-color: #1a1a1a;
-            margin: 0 auto 15px;
+            background-color: rgba(26, 26, 26, 0.8);
+            margin: 0 auto 10px;
             border: 1px dashed #444;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555;
+            color: #888;
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
         .footer-text {
-            color: #888;
+            color: #ccc;
             font-size: 0.75rem;
-            line-height: 1.6;
-            margin: 0;
+            line-height: 1.4;
+            margin: 2px 0;
             letter-spacing: 0.7px;
+            /* 增加陰影確保文字在不同背景色上都能閱讀 */
+            text-shadow: 1px 1px 3px #000; 
         }
 
         .special-thanks {
-            color: #aaa;
+            color: #fff;
+            font-weight: bold;
             letter-spacing: 0.7px;
+            text-shadow: 1px 1px 3px #000;
         }
     </style>
 </head>
@@ -428,13 +435,14 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <footer>
-        <div id="ad-banner-slot">( 徵！！歡迎各大廠商報名謝謝 )</div>
-        <p class="footer-text">Copyright © Fameimage 2026.</p>
-        <p class="footer-text">Special Thanks | <span class="special-thanks">wodalang</span></p>
-    </footer>
+        <!-- Footer 絕對定位壓在畫布上 -->
+        <footer>
+            <div id="ad-banner-slot">( 徵！！歡迎各大廠商報名謝謝 )</div>
+            <p class="footer-text">Copyright © Fameimage 2026.</p>
+            <p class="footer-text">Special Thanks | <span class="special-thanks">wodalang</span></p>
+        </footer>
+    </div>
 
     <script>
         const YOUR_LINKS = {
@@ -524,12 +532,6 @@
                     ctx.restore();
                 }
             }
-        }
-
-        function drawBackground(ctx) {
-            ctx.fillStyle = '#D3D3D3';
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            drawStars(ctx);
         }
 
         const assets = { images: {} };
@@ -652,8 +654,8 @@
         }
 
         function resize() { 
-            canvas.width = gameContainer.clientWidth; 
-            canvas.height = gameContainer.clientHeight; 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
         }
         window.addEventListener('resize', resize); resize();
 
@@ -746,7 +748,9 @@
         }
 
         function handleClick(e) {
+            if(e.target.closest('button') || e.target.closest('footer')) return; 
             if (gameState !== 'PLAYING' || isExplodingBonus) return;
+            
             const rect = canvas.getBoundingClientRect();
             const clickX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const clickY = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -770,8 +774,8 @@
             } else { gameOver(); }
         }
 
-        window.addEventListener('mousedown', (e) => { if(e.target.closest('button') || e.target.closest('footer')) return; handleClick(e); });
-        window.addEventListener('touchstart', (e) => { if(e.target.closest('button') || e.target.closest('footer')) return; handleClick(e); }, {passive: false});
+        window.addEventListener('mousedown', (e) => { handleClick(e); });
+        window.addEventListener('touchstart', (e) => { handleClick(e); }, {passive: false});
 
         function gameLoop(timestamp) {
             if (gameState !== 'PLAYING' && gameState !== 'GAMEOVER') return;
@@ -807,7 +811,6 @@
         function draw() {
             const centerX = canvas.width / 2, centerY = canvas.height / 2;
             
-            // 背景滿版繪製
             const bgImg = assets.images.background;
             if (bgImg && bgImg.complete) {
                 const ratio = Math.max(canvas.width / bgImg.naturalWidth, canvas.height / bgImg.naturalHeight);
@@ -821,7 +824,6 @@
             
             drawStars(ctx);
 
-            // 繪製喇叭
             const speakerL = assets.images.speaker_left, speakerR = assets.images.speaker_right;
             if (speakerL && speakerL.complete) {
                 const { w, h } = getAdaptiveSize(speakerL, canvas.width, canvas.height);
@@ -863,10 +865,7 @@
                 }
             }
             
-            // 粒子特效
             particles.forEach(p => p.draw(ctx));
-
-            // 紅包 (最上層)
             firecrackerTargets.forEach(t => t.draw(ctx));
         }
 

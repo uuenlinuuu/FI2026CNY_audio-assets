@@ -86,6 +86,12 @@
             }
         }
 
+        /* 確保當前 active 的畫面（包含 Menu）位於絕對最上層 */
+        .screen.active {
+            display: flex !important;
+            z-index: 300; /* 高於所有其他元素，包含 Game Over 的 200 */
+        }
+        
         .screen.retro-theme.active {
             display: flex;
         }
